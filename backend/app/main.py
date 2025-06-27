@@ -12,6 +12,8 @@ from .schemas import MarketIndices, LatestMacro, PCEStat, FedRate, VIXClose
 app = FastAPI(title="Goldapp API")
 
 
+# Returns UUP price and aggregated US equity volume.
+# Any error leads to a 503 response for the API client.
 @app.get("/api/v1/market_indices", response_model=MarketIndices)
 def get_market_indices():
     try:
