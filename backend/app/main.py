@@ -19,7 +19,6 @@ def get_market_indices():
     except Exception:
         raise HTTPException(status_code=503, detail="Data source unavailable")
 
-
 @app.get("/api/v1/latest_macro", response_model=LatestMacro)
 def get_latest_macro():
     try:
@@ -50,4 +49,3 @@ def get_vix():
         return fetch_vix()
     except Exception:
         raise HTTPException(status_code=503, detail="Data source unavailable")
-
