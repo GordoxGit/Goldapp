@@ -1,92 +1,81 @@
-# 📱 GoldMarket Live — Application Android avec Notification Économique Temps Réel (USA)
+# GoldMarket Live
 
-> **Statut** : 🚧 En développement  
-> **Backend** : FastAPI (Python 3.10+)  
-> **Frontend** : Android natif (Kotlin, Jetpack Compose)  
-> **OS Cible** : Android 8.0+ (.apk installable manuellement)  
-> **Déploiement** : VPS Debian 12 (OVH), systemd + Nginx
+> **Version 0.1.0 — MVP backend en cours**
 
----
+Application Android + backend FastAPI qui affiche en **notification permanente** les indicateurs macro
+impactant directement le cours de l’or.
 
-## 🎯 Objectif
+## 📐 Architecture
 
-Afficher dans une **notification permanente dynamique** sur Android, en temps réel :
+| Couche                   | Tech                        | Rôle                                                              |
+| ------------------------ | --------------------------- | ----------------------------------------------------------------- |
+| **Backend**              | FastAPI + Python 3.10       | Agrège & normalise les données (yfinance, BLS, BEA, FRED bientôt) |
+| **Notification Service** | Kotlin + ForegroundService  | Affiche les indicateurs mis à jour toutes 30 s                    |
+| **VPS**                  | Debian 12 + systemd + Nginx | Héberge le backend 24/7                                           |
 
-- 🔺 **Taux actuel de la FED**
-- 🗓️ **Prochaine réunion FOMC**
-- 🎤 **Prochain discours de Powell**
-- 📊 **Dernière statistique macro US** (CPI, NFP ou PCE)
-- 📉 **DXY (via UUP)**
-- 😱 **VIX (volatilité US, via FRED)**
-- 💰 **Volume global du marché US** (NYSE + Nasdaq, via SPY + QQQ)
+```
+Android (Retrofit) ─┐                     
+                   │ /api/v1/*           
+         Nginx ───► FastAPI (Gunicorn)──► yfinance / BLS / BEA / (FRED)
+```
 
-Toutes les données proviennent de **sources officielles gratuites**, sans scraping : FRED, BLS, BEA, Alpha Vantage, RSS Fed.
+## 🗂️ Repo layout (MVP)
 
----
+```
+Goldapp/
+├─ backend/
+│  ├─ app/
+│  │  ├─ __init__.py
+│  │  ├─ main.py          # point d'entrée FastAPI
+│  │  ├─ crud.py          # appels externes + cache
+│  │  ├─ schemas.py       # modèles Pydantic
+│  │  └─ config.py        # lecture .env
+│  ├─ requirements.txt
+│  └─ .env.example        # gabarit variables d'environnement
+└─ README.md              # ce fichier
+```
 
-## 🏗️ Architecture
+## 🚀 Lancer le backend localement
 
-### Backend : `FastAPI` + `cachetools`
+```bash
+cd backend
+python -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload  # http://127.0.0.1:8000/docs
+```
 
-- Centralise et normalise toutes les données économiques.
-- Expose des endpoints REST unifiés.
-- Implémente un cache TTL par source pour respecter les quotas.
-- Déployé sur **Debian 12** avec **Gunicorn + systemd + Nginx**.
+### `.env` (exemple)
 
-### Frontend : `Kotlin` + `Jetpack Compose`
+```
+# clés officielles (facultatives pour le MVP)
+BLS_API_KEY=xxxxxxxxxxxxxxxx
+BEA_API_KEY=xxxxxxxxxxxxxxxx
+# FRED_API_KEY=xxxxxxxxxxxxxxxx  # sera ajouté plus tard
+```
 
-- UI minimale (liste d'indicateurs)
-- ForegroundService résilient pour maintenir la notification à l’écran
-- Rafraîchissement silencieux toutes les 30s
-- Communication via Retrofit vers API REST interne
+## 📡 Endpoints disponibles (MVP)
 
----
+| Route                    | Méthode | Description                                       |
+| ------------------------ | ------- | ------------------------------------------------- |
+| `/api/v1/market_indices` | GET     | Retourne **DXY (UUP)** et **Volume US** (SPY+QQQ) |
 
-## 🔌 Endpoints REST disponibles
+`/api/v1/fed_rate`, `/api/v1/vix`, `/api/v1/latest_macro` … seront ajoutés dans les tickets suivants.
 
-| Endpoint | Donnée retournée |
-|---------|------------------|
-| `/api/v1/fed_rate` | Taux actuel de la FED |
-| `/api/v1/fomc_next` | Date de la prochaine réunion FOMC |
-| `/api/v1/powell_speech` | Détail du prochain discours de Powell |
-| `/api/v1/latest_macro` | Dernière statistique macro publiée (CPI/NFP/PCE) |
-| `/api/v1/market_indices` | Indice DXY (proxy UUP) + VIX |
-| `/api/v1/us_market_volume` | Volume global (SPY + QQQ) |
+## 🛠️ Build & déploiement VPS
 
----
+1. Copier le dossier **backend/** sur le serveur.
+2. Créer un service **systemd** (voir `deploy/goldapp.service` à venir).
+3. Brancher Nginx en reverse‑proxy (port 80).
 
-## ⚙️ Technologies
+## ✅ Feuille de route courte
 
-### Backend
+* [x] Ticket #1 — Base FastAPI + endpoint market\_indices (yfinance)
+* [ ] Ticket #2 — Endpoints CPI/NFP (BLS)
+* [ ] Ticket #3 — Endpoint PCE (BEA)
+* [ ] Ticket #4 — Endpoints FED rate & VIX (FRED)
+* [ ] Ticket #5 — Service systemd + Nginx conf
+* [ ] Ticket #6 — Android ForegroundService & UI Compose
 
-- Python 3.10+
-- FastAPI
-- cachetools
-- requests, feedparser
-- Gunicorn / systemd
-- Nginx (reverse proxy)
+## 📝 Licence
 
-### Android
-
-- Kotlin
-- Jetpack Compose
-- Retrofit
-- ForegroundService (type: `dataSync`)
-- CoroutineScope pour boucle de mise à jour
-
----
-
-## 🛡️ Sécurité & Bonnes pratiques
-
-- Aucun scraping, que des APIs **officielles**.
-- Backend en lecture seule, sans persistence.
-- .env avec variables API : `FRED_API_KEY`, `BEA_API_KEY`, `ALPHA_API_KEY`, etc.
-- Signature d’APK en release via `keytool`.
-
----
-
-## 🧠 Cache TTL (backend)
-
-| Donnée | TTL |
-|--------|-----|
-| FE
+Projet sous licence **MIT** (voir fichier `LICENSE`).
