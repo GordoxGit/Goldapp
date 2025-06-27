@@ -28,7 +28,11 @@ FRED_BASE_URL = "https://api.stlouisfed.org/fred/series/observations"
 
 
 def _get_fast_info_value(info: dict, key_base: str):
-    return info.get(key_base) or info.get(key_base.capitalize()) or info.get(key_base.replace('_', '').capitalize())
+    return (
+        info.get(key_base)
+        or info.get(key_base.capitalize())
+        or info.get(key_base.replace("_", "").capitalize())
+    )
 
 
 @cached(CACHE)
@@ -71,7 +75,11 @@ def _fetch_bls_series(series_id: str, name: str, unit: str) -> MacroStat:
     params = {"latest": "true"}
     if settings.bls_api_key:
         params["registrationKey"] = settings.bls_api_key
-    resp = requests.get(f"{BLS_BASE_URL}{series_id}", params=params, timeout=10)
+    resp = requests.get(
+        f"{BLS_BASE_URL}{series_id}",
+        params=params,
+        timeout=10,
+    )
     resp.raise_for_status()
     json_data = resp.json()
     item = json_data["Results"]["series"][0]["data"][0]
@@ -88,7 +96,9 @@ def _fetch_bls_series(series_id: str, name: str, unit: str) -> MacroStat:
 
 @cached(MACRO_CACHE)
 def fetch_latest_macro() -> LatestMacro:
-    """Return the most recently published macro indicator between CPI and NFP."""
+    """
+    Return the most recently published macro indicator between CPI and NFP.
+    """
     try:
         cpi = _fetch_bls_series(BLS_CPI_SERIES, "CPI", "index")
         nfp = _fetch_bls_series(BLS_NFP_SERIES, "NFP", "k jobs")
