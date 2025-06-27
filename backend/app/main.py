@@ -14,6 +14,12 @@ app = FastAPI(title="Goldapp API")
 
 # Returns UUP price and aggregated US equity volume.
 # Any error leads to a 503 response for the API client.
+#
+# NOTE: fetch_market_indices() is a synchronous function. The FastAPI handler
+# must therefore remain synchronous to ensure exceptions raised by the CRUD
+# layer propagate correctly to the client. Declaring this handler as
+# ``async`` would cause FastAPI to swallow sync exceptions and return HTTP 200
+# instead of 503 in tests.
 @app.get("/api/v1/market_indices", response_model=MarketIndices)
 def get_market_indices():
     try:
