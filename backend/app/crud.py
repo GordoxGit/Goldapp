@@ -4,16 +4,27 @@ import requests
 import yfinance as yf
 
 from .config import settings
-from .schemas import MarketIndices, Indicator, MacroStat, LatestMacro, PCEStat
+from .schemas import (
+    MarketIndices,
+    Indicator,
+    MacroStat,
+    LatestMacro,
+    PCEStat,
+    FedRate,
+    VIXClose,
+)
 
 CACHE = TTLCache(maxsize=8, ttl=settings.ttl)
 MACRO_CACHE = TTLCache(maxsize=2, ttl=86400)
 PCE_CACHE = TTLCache(maxsize=1, ttl=86400)
+FRED_RATE_CACHE = TTLCache(maxsize=1, ttl=21600)
+VIX_CACHE = TTLCache(maxsize=1, ttl=21600)
 
 BLS_BASE_URL = "https://api.bls.gov/publicAPI/v2/timeseries/data/"
 BLS_CPI_SERIES = "CUUR0000SA0"
 BLS_NFP_SERIES = "CES0000000001"
 BEA_BASE_URL = "https://apps.bea.gov/api/data/"
+FRED_BASE_URL = "https://api.stlouisfed.org/fred/series/observations"
 
 
 def _get_fast_info_value(info: dict, key_base: str):
@@ -125,3 +136,53 @@ def fetch_pce() -> PCEStat:
     except Exception as exc:
         PCE_CACHE.clear()
         raise RuntimeError("BEA unavailable") from exc
+
+
+@cached(FRED_RATE_CACHE)
+def fetch_fed_rate() -> FedRate:
+    """Return the latest federal funds rate from FRED."""
+    if not settings.fred_api_key:
+        raise RuntimeError("FRED API key missing")
+
+    params = {
+        "series_id": "FEDFUNDS",
+        "api_key": settings.fred_api_key,
+        "file_type": "json",
+        "sort_order": "desc",
+        "limit": 1,
+    }
+
+    try:
+        resp = requests.get(FRED_BASE_URL, params=params, timeout=10)
+        resp.raise_for_status()
+        json_data = resp.json()
+        obs = json_data["observations"][0]
+        return FedRate(value=float(obs["value"]), date=obs["date"])
+    except Exception as exc:
+        FRED_RATE_CACHE.clear()
+        raise RuntimeError("FRED unavailable") from exc
+
+
+@cached(VIX_CACHE)
+def fetch_vix() -> VIXClose:
+    """Return the latest VIX closing value from FRED."""
+    if not settings.fred_api_key:
+        raise RuntimeError("FRED API key missing")
+
+    params = {
+        "series_id": "VIXCLS",
+        "api_key": settings.fred_api_key,
+        "file_type": "json",
+        "sort_order": "desc",
+        "limit": 1,
+    }
+
+    try:
+        resp = requests.get(FRED_BASE_URL, params=params, timeout=10)
+        resp.raise_for_status()
+        json_data = resp.json()
+        obs = json_data["observations"][0]
+        return VIXClose(value=float(obs["value"]), date=obs["date"])
+    except Exception as exc:
+        VIX_CACHE.clear()
+        raise RuntimeError("FRED unavailable") from exc

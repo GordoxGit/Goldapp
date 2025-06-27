@@ -62,8 +62,9 @@ BEA_API_KEY=xxxxxxxxxxxxxxxx
 | ------------------------ | ------- | ------------------------------------------------- |
 | `/api/v1/market_indices` | GET     | Retourne **DXY (UUP)** et **Volume US** (SPY+QQQ) |
 | `/api/v1/latest_macro`   | GET     | Dernière statistique CPI ou NFP publiée |
-
-`/api/v1/fed_rate`, `/api/v1/vix` … seront ajoutés dans les tickets suivants.
+| `/api/v1/pce`            | GET     | Variation mensuelle du PCE |
+| `/api/v1/fed_rate`       | GET     | Dernier taux directeur de la FED |
+| `/api/v1/vix`            | GET     | Clôture quotidienne du VIX |
 
 ## 🛠️ Build & déploiement VPS
 
@@ -75,8 +76,8 @@ BEA_API_KEY=xxxxxxxxxxxxxxxx
 
 * [x] Ticket #1 — Base FastAPI + endpoint market\_indices (yfinance)
 * [x] Ticket #2 — Endpoints CPI/NFP (BLS)
-* [ ] Ticket #3 — Endpoint PCE (BEA)
-* [ ] Ticket #4 — Endpoints FED rate & VIX (FRED)
+* [x] Ticket #3 — Endpoint PCE (BEA)
+* [x] Ticket #4 — Endpoints FED rate & VIX (FRED)
 * [ ] Ticket #5 — Service systemd + Nginx conf
 * [ ] Ticket #6 — Android ForegroundService & UI Compose
 

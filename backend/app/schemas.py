@@ -32,3 +32,15 @@ class PCEStat(BaseModel):
 
 class LatestMacro(BaseModel):
     latest_macro: MacroStat
+
+
+class FedRate(BaseModel):
+    value: float
+    date: str
+    source: str = "FRED"
+
+
+class VIXClose(BaseModel):
+    value: float
+    date: str
+    source: str = "FRED"
