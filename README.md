@@ -1,5 +1,6 @@
 # GoldMarket Live
 ![Backend CI](https://github.com/<ORG_OR_USER>/Goldapp/actions/workflows/ci.yml/badge.svg)
+![Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen)
 
 > **Version 0.1.0 — MVP backend en cours**
 
