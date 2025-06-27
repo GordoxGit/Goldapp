@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 
-from .crud import fetch_market_indices, fetch_latest_macro
-from .schemas import MarketIndices, LatestMacro
+from .crud import fetch_market_indices, fetch_latest_macro, fetch_pce
+from .schemas import MarketIndices, LatestMacro, PCEStat
 
 app = FastAPI(title="Goldapp API")
 
@@ -20,3 +20,12 @@ def get_latest_macro():
         return fetch_latest_macro()
     except Exception:
         raise HTTPException(status_code=503, detail="Data source unavailable")
+
+
+@app.get("/api/v1/pce", response_model=PCEStat)
+def get_pce():
+    try:
+        return fetch_pce()
+    except Exception:
+        raise HTTPException(status_code=503, detail="Data source unavailable")
+

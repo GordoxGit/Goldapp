@@ -4,14 +4,16 @@ import requests
 import yfinance as yf
 
 from .config import settings
-from .schemas import MarketIndices, Indicator, MacroStat, LatestMacro
+from .schemas import MarketIndices, Indicator, MacroStat, LatestMacro, PCEStat
 
 CACHE = TTLCache(maxsize=8, ttl=settings.ttl)
 MACRO_CACHE = TTLCache(maxsize=2, ttl=86400)
+PCE_CACHE = TTLCache(maxsize=1, ttl=86400)
 
 BLS_BASE_URL = "https://api.bls.gov/publicAPI/v2/timeseries/data/"
 BLS_CPI_SERIES = "CUUR0000SA0"
 BLS_NFP_SERIES = "CES0000000001"
+BEA_BASE_URL = "https://apps.bea.gov/api/data/"
 
 
 def _get_fast_info_value(info: dict, key_base: str):
@@ -84,3 +86,42 @@ def fetch_latest_macro() -> LatestMacro:
     except Exception as exc:
         MACRO_CACHE.clear()
         raise RuntimeError("BLS unavailable") from exc
+
+
+@cached(PCE_CACHE)
+def fetch_pce() -> PCEStat:
+    """Return the latest monthly PCE percent change from BEA."""
+    if not settings.bea_api_key:
+        raise RuntimeError("BEA API key missing")
+
+    params = {
+        "UserID": settings.bea_api_key,
+        "method": "GetData",
+        "datasetname": "NIPA",
+        "TableName": "T20807",
+        "Frequency": "M",
+        "Year": "latest",
+        "ResultFormat": "JSON",
+    }
+
+    try:
+        resp = requests.get(BEA_BASE_URL, params=params, timeout=10)
+        resp.raise_for_status()
+        json_data = resp.json()
+        data = json_data["BEAAPI"]["Results"]["Data"]
+        latest = max(data, key=lambda item: item["TimePeriod"])
+        period = latest["TimePeriod"]
+        if "M" in period:
+            year, month = period.split("M")
+        else:
+            year, month = period.split("-")[:2]
+        return PCEStat(
+            name="PCE",
+            value=float(latest["DataValue"]),
+            unit="%",
+            date=f"{year}-{month}",
+            source="BEA",
+        )
+    except Exception as exc:
+        PCE_CACHE.clear()
+        raise RuntimeError("BEA unavailable") from exc
