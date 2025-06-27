@@ -3,3 +3,5 @@ uvicorn[standard]
 yfinance
 cachetools
 python-dotenv
+pytest
+pytest-cov
