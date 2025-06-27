@@ -37,7 +37,7 @@ async def test_api_market_indices_error(mocker):
 @pytest.mark.asyncio
 async def test_api_latest_macro_ok(mocker):
     payload = LatestMacro(latest_macro=MacroStat(name="CPI", value=1.0, unit="i", date="2024-06", source="BLS"))
-    mocker.patch("app.crud.fetch_latest_macro", return_value=payload)
+    mocker.patch("app.main.fetch_latest_macro", return_value=payload)
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         resp = await ac.get("/api/v1/latest_macro")
@@ -47,7 +47,7 @@ async def test_api_latest_macro_ok(mocker):
 
 @pytest.mark.asyncio
 async def test_api_latest_macro_error(mocker):
-    mocker.patch("app.crud.fetch_latest_macro", side_effect=RuntimeError)
+    mocker.patch("app.main.fetch_latest_macro", side_effect=RuntimeError)
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         resp = await ac.get("/api/v1/latest_macro")
@@ -57,7 +57,7 @@ async def test_api_latest_macro_error(mocker):
 @pytest.mark.asyncio
 async def test_api_pce_ok(mocker):
     payload = PCEStat(name="PCE", value=0.1, unit="%", date="2024-06", source="BEA")
-    mocker.patch("app.crud.fetch_pce", return_value=payload)
+    mocker.patch("app.main.fetch_pce", return_value=payload)
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         resp = await ac.get("/api/v1/pce")
@@ -67,7 +67,7 @@ async def test_api_pce_ok(mocker):
 
 @pytest.mark.asyncio
 async def test_api_pce_error(mocker):
-    mocker.patch("app.crud.fetch_pce", side_effect=RuntimeError)
+    mocker.patch("app.main.fetch_pce", side_effect=RuntimeError)
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         resp = await ac.get("/api/v1/pce")
@@ -77,7 +77,7 @@ async def test_api_pce_error(mocker):
 @pytest.mark.asyncio
 async def test_api_fed_rate_ok(mocker):
     payload = FedRate(value=5.0, date="2024-06-13")
-    mocker.patch("app.crud.fetch_fed_rate", return_value=payload)
+    mocker.patch("app.main.fetch_fed_rate", return_value=payload)
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         resp = await ac.get("/api/v1/fed_rate")
@@ -87,7 +87,7 @@ async def test_api_fed_rate_ok(mocker):
 
 @pytest.mark.asyncio
 async def test_api_fed_rate_error(mocker):
-    mocker.patch("app.crud.fetch_fed_rate", side_effect=RuntimeError)
+    mocker.patch("app.main.fetch_fed_rate", side_effect=RuntimeError)
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         resp = await ac.get("/api/v1/fed_rate")
@@ -97,7 +97,7 @@ async def test_api_fed_rate_error(mocker):
 @pytest.mark.asyncio
 async def test_api_vix_ok(mocker):
     payload = VIXClose(value=15.5, date="2024-06-14")
-    mocker.patch("app.crud.fetch_vix", return_value=payload)
+    mocker.patch("app.main.fetch_vix", return_value=payload)
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         resp = await ac.get("/api/v1/vix")
@@ -107,7 +107,7 @@ async def test_api_vix_ok(mocker):
 
 @pytest.mark.asyncio
 async def test_api_vix_error(mocker):
-    mocker.patch("app.crud.fetch_vix", side_effect=RuntimeError)
+    mocker.patch("app.main.fetch_vix", side_effect=RuntimeError)
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         resp = await ac.get("/api/v1/vix")
