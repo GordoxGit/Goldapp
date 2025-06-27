@@ -44,6 +44,8 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload  # http://127.0.0.1:8000/docs
 ```
 
+Le cache interne peut être ajusté via la variable `TTL` dans un fichier `.env` placé à la racine de `backend/`. Par défaut, les données sont conservées 300 s.
+
 ### `.env` (exemple)
 
 ```
