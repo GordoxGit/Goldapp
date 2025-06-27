@@ -7,3 +7,4 @@ pytest
 pytest-cov
 pydantic>=2.0
 pydantic-settings>=2.0
+pytest-mock
