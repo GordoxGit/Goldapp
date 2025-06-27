@@ -15,38 +15,53 @@ app = FastAPI(title="Goldapp API")
 @app.get("/api/v1/market_indices", response_model=MarketIndices)
 def get_market_indices():
     try:
-        return fetch_market_indices()
+        data = fetch_market_indices()
     except Exception:
-        raise HTTPException(status_code=503, detail="Data source unavailable")
+        raise HTTPException(status_code=503, detail="Service Unavailable")
+    if data is None:
+        raise HTTPException(status_code=503, detail="Service Unavailable")
+    return data
 
 
 @app.get("/api/v1/latest_macro", response_model=LatestMacro)
 def get_latest_macro():
     try:
-        return fetch_latest_macro()
+        data = fetch_latest_macro()
     except Exception:
-        raise HTTPException(status_code=503, detail="Data source unavailable")
+        raise HTTPException(status_code=503, detail="Service Unavailable")
+    if data is None:
+        raise HTTPException(status_code=503, detail="Service Unavailable")
+    return data
 
 
 @app.get("/api/v1/pce", response_model=PCEStat)
 def get_pce():
     try:
-        return fetch_pce()
+        data = fetch_pce()
     except Exception:
-        raise HTTPException(status_code=503, detail="Data source unavailable")
+        raise HTTPException(status_code=503, detail="Service Unavailable")
+    if data is None:
+        raise HTTPException(status_code=503, detail="Service Unavailable")
+    return data
 
 
 @app.get("/api/v1/fed_rate", response_model=FedRate)
 def get_fed_rate():
     try:
-        return fetch_fed_rate()
+        data = fetch_fed_rate()
     except Exception:
-        raise HTTPException(status_code=503, detail="Data source unavailable")
+        raise HTTPException(status_code=503, detail="Service Unavailable")
+    if data is None:
+        raise HTTPException(status_code=503, detail="Service Unavailable")
+    return data
 
 
 @app.get("/api/v1/vix", response_model=VIXClose)
 def get_vix():
     try:
-        return fetch_vix()
+        data = fetch_vix()
     except Exception:
-        raise HTTPException(status_code=503, detail="Data source unavailable")
+        raise HTTPException(status_code=503, detail="Service Unavailable")
+    if data is None:
+        raise HTTPException(status_code=503, detail="Service Unavailable")
+    return data
