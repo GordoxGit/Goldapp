@@ -61,8 +61,9 @@ BEA_API_KEY=xxxxxxxxxxxxxxxx
 | Route                    | Méthode | Description                                       |
 | ------------------------ | ------- | ------------------------------------------------- |
 | `/api/v1/market_indices` | GET     | Retourne **DXY (UUP)** et **Volume US** (SPY+QQQ) |
+| `/api/v1/latest_macro`   | GET     | Dernière statistique CPI ou NFP publiée |
 
-`/api/v1/fed_rate`, `/api/v1/vix`, `/api/v1/latest_macro` … seront ajoutés dans les tickets suivants.
+`/api/v1/fed_rate`, `/api/v1/vix` … seront ajoutés dans les tickets suivants.
 
 ## 🛠️ Build & déploiement VPS
 
@@ -73,7 +74,7 @@ BEA_API_KEY=xxxxxxxxxxxxxxxx
 ## ✅ Feuille de route courte
 
 * [x] Ticket #1 — Base FastAPI + endpoint market\_indices (yfinance)
-* [ ] Ticket #2 — Endpoints CPI/NFP (BLS)
+* [x] Ticket #2 — Endpoints CPI/NFP (BLS)
 * [ ] Ticket #3 — Endpoint PCE (BEA)
 * [ ] Ticket #4 — Endpoints FED rate & VIX (FRED)
 * [ ] Ticket #5 — Service systemd + Nginx conf

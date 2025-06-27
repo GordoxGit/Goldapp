@@ -1,11 +1,17 @@
 from datetime import datetime
 from cachetools import cached, TTLCache
+import requests
 import yfinance as yf
 
 from .config import settings
-from .schemas import MarketIndices, Indicator
+from .schemas import MarketIndices, Indicator, MacroStat, LatestMacro
 
 CACHE = TTLCache(maxsize=8, ttl=settings.ttl)
+MACRO_CACHE = TTLCache(maxsize=2, ttl=86400)
+
+BLS_BASE_URL = "https://api.bls.gov/publicAPI/v2/timeseries/data/"
+BLS_CPI_SERIES = "CUUR0000SA0"
+BLS_NFP_SERIES = "CES0000000001"
 
 
 def _get_fast_info_value(info: dict, key_base: str):
@@ -46,3 +52,35 @@ def fetch_market_indices() -> MarketIndices:
         # Clear cache entry on error
         CACHE.clear()
         raise RuntimeError("yfinance unavailable") from exc
+
+
+def _fetch_bls_series(series_id: str, name: str, unit: str) -> MacroStat:
+    params = {"latest": "true"}
+    if settings.bls_api_key:
+        params["registrationKey"] = settings.bls_api_key
+    resp = requests.get(f"{BLS_BASE_URL}{series_id}", params=params, timeout=10)
+    resp.raise_for_status()
+    json_data = resp.json()
+    item = json_data["Results"]["series"][0]["data"][0]
+    year = item["year"]
+    month = item["period"].lstrip("M")
+    return MacroStat(
+        name=name,
+        value=float(item["value"]),
+        unit=unit,
+        date=f"{year}-{month}",
+        source="BLS",
+    )
+
+
+@cached(MACRO_CACHE)
+def fetch_latest_macro() -> LatestMacro:
+    """Return the most recently published macro indicator between CPI and NFP."""
+    try:
+        cpi = _fetch_bls_series(BLS_CPI_SERIES, "CPI", "index")
+        nfp = _fetch_bls_series(BLS_NFP_SERIES, "NFP", "k jobs")
+        latest = cpi if cpi.date >= nfp.date else nfp
+        return LatestMacro(latest_macro=latest)
+    except Exception as exc:
+        MACRO_CACHE.clear()
+        raise RuntimeError("BLS unavailable") from exc
