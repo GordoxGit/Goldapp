@@ -66,6 +66,18 @@ BEA_API_KEY=xxxxxxxxxxxxxxxx
 | `/api/v1/pce`            | GET     | Variation mensuelle du PCE |
 | `/api/v1/fed_rate`       | GET     | Dernier taux directeur de la FED |
 | `/api/v1/vix`            | GET     | Clôture quotidienne du VIX |
+| `/api/v1/fomc_next`      | GET     | Prochaine réunion FOMC |
+
+Exemple de réponse :
+
+```json
+{
+  "date": "2024-07-31",
+  "time": "18:00",
+  "title": "FOMC Meeting",
+  "url": "https://www.federalreserve.gov/..."
+}
+```
 
 ## 🛠️ Build & déploiement VPS
 

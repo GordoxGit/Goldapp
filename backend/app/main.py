@@ -6,8 +6,16 @@ from .crud import (
     fetch_pce,
     fetch_fed_rate,
     fetch_vix,
+    fetch_fomc_next,
 )
-from .schemas import MarketIndices, LatestMacro, PCEStat, FedRate, VIXClose
+from .schemas import (
+    MarketIndices,
+    LatestMacro,
+    PCEStat,
+    FedRate,
+    VIXClose,
+    FomcNext,
+)
 
 app = FastAPI(title="Goldapp API")
 
@@ -71,5 +79,15 @@ def get_vix():
     except Exception:
         raise HTTPException(status_code=503, detail="Service Unavailable")
     if data is None:
+        raise HTTPException(status_code=503, detail="Service Unavailable")
+    return data
+
+
+@app.get("/api/v1/fomc_next", response_model=FomcNext | None)
+def get_fomc_next():
+    """Return the next upcoming FOMC meeting."""
+    try:
+        data = fetch_fomc_next()
+    except Exception:
         raise HTTPException(status_code=503, detail="Service Unavailable")
     return data
