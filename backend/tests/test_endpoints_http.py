@@ -1,4 +1,6 @@
 import pytest
+from datetime import datetime
+
 from httpx import AsyncClient, ASGITransport
 
 from app.main import app
@@ -15,8 +17,18 @@ from app.schemas import (
 
 @pytest.mark.asyncio
 async def test_api_market_indices_ok(mocker):
-    mock_ticker = mocker.patch("yfinance.Ticker")
-    mock_ticker.return_value.fast_info = {"last_price": 1, "last_volume": 2}
+    payload = MarketIndices(
+        dxy_proxy_uup=Indicator(
+            symbol="UUP", value=1.0, unit="USD", last_updated_utc=datetime.utcnow()
+        ),
+        volume_aggregated=Indicator(
+            symbol="US_VOLUME",
+            value=2.0,
+            unit="shares",
+            last_updated_utc=datetime.utcnow(),
+        ),
+    )
+    mocker.patch("app.main.fetch_market_indices", return_value=payload)
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         resp = await ac.get("/api/v1/market_indices")
@@ -27,7 +39,22 @@ async def test_api_market_indices_ok(mocker):
 
 @pytest.mark.asyncio
 async def test_api_market_indices_error(mocker):
-    mocker.patch("yfinance.Ticker", side_effect=Exception)
+    from app.crud import fetch_market_indices
+
+    fetch_market_indices.cache_clear()
+    mocker.patch("app.main.fetch_market_indices", side_effect=Exception)
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        resp = await ac.get("/api/v1/market_indices")
+    assert resp.status_code == 503
+
+
+@pytest.mark.asyncio
+async def test_api_market_indices_none(mocker):
+    from app.crud import fetch_market_indices
+
+    fetch_market_indices.cache_clear()
+    mocker.patch("app.main.fetch_market_indices", return_value=None)
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         resp = await ac.get("/api/v1/market_indices")
