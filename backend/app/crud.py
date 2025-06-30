@@ -1,4 +1,5 @@
 from datetime import datetime
+from xml.etree import ElementTree
 from cachetools import cached, TTLCache
 import requests
 import yfinance as yf
@@ -12,6 +13,7 @@ from .schemas import (
     PCEStat,
     FedRate,
     VIXClose,
+    FomcNext,
 )
 
 CACHE = TTLCache(maxsize=8, ttl=settings.ttl)
@@ -19,6 +21,7 @@ MACRO_CACHE = TTLCache(maxsize=2, ttl=86400)
 PCE_CACHE = TTLCache(maxsize=1, ttl=86400)
 FRED_RATE_CACHE = TTLCache(maxsize=1, ttl=21600)
 VIX_CACHE = TTLCache(maxsize=1, ttl=21600)
+FOMC_NEXT_CACHE = TTLCache(maxsize=1, ttl=86400)
 
 BLS_BASE_URL = "https://api.bls.gov/publicAPI/v2/timeseries/data/"
 BLS_CPI_SERIES = "CUUR0000SA0"
@@ -196,3 +199,39 @@ def fetch_vix() -> VIXClose:
     except Exception as exc:
         VIX_CACHE.clear()
         raise RuntimeError("FRED unavailable") from exc
+
+
+@cached(FOMC_NEXT_CACHE)
+def fetch_fomc_next() -> FomcNext | None:
+    """Return the next scheduled FOMC meeting parsed from the RSS feed."""
+    url = "https://www.federalreserve.gov/feeds/meetingcalendar.xml"
+    try:
+        resp = requests.get(url, timeout=10)
+        resp.raise_for_status()
+        xml_text = resp.text
+    except Exception as exc:
+        FOMC_NEXT_CACHE.clear()
+        raise RuntimeError("Fed RSS unavailable") from exc
+
+    try:
+        root = ElementTree.fromstring(xml_text)
+        items = root.findall(".//item")
+        now = datetime.utcnow()
+        for item in items:
+            start_text = item.findtext("start")
+            if not start_text:
+                continue
+            dt = datetime.fromisoformat(start_text.replace("Z", "+00:00"))
+            if dt > now:
+                title = item.findtext("title") or ""
+                link = item.findtext("link") or ""
+                return FomcNext(
+                    date=dt.strftime("%Y-%m-%d"),
+                    time=dt.strftime("%H:%M"),
+                    title=title,
+                    url=link,
+                )
+        return None
+    except Exception as exc:
+        FOMC_NEXT_CACHE.clear()
+        raise RuntimeError("RSS parse error") from exc

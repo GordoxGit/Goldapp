@@ -139,3 +139,25 @@ async def test_api_vix_error(mocker):
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         resp = await ac.get("/api/v1/vix")
     assert resp.status_code == 503
+
+
+@pytest.mark.asyncio
+async def test_api_fomc_next_ok(mocker):
+    from app.schemas import FomcNext
+
+    payload = FomcNext(date="2099-01-01", time="12:00", title="Meeting", url="u")
+    mocker.patch("app.main.fetch_fomc_next", return_value=payload)
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        resp = await ac.get("/api/v1/fomc_next")
+    assert resp.status_code == 200
+    assert resp.json()["title"] == "Meeting"
+
+
+@pytest.mark.asyncio
+async def test_api_fomc_next_error(mocker):
+    mocker.patch("app.main.fetch_fomc_next", side_effect=RuntimeError)
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        resp = await ac.get("/api/v1/fomc_next")
+    assert resp.status_code == 503

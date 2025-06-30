@@ -44,3 +44,12 @@ class VIXClose(BaseModel):
     value: float
     date: str
     source: str = "FRED"
+
+
+class FomcNext(BaseModel):
+    """Represent the next scheduled FOMC meeting."""
+
+    date: str  # YYYY-MM-DD
+    time: str  # HH:MM (UTC)
+    title: str
+    url: str
