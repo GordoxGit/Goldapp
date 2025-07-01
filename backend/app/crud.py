@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from xml.etree import ElementTree
 from cachetools import cached, TTLCache
 import requests
@@ -216,7 +216,7 @@ def fetch_fomc_next() -> FomcNext | None:
     try:
         root = ElementTree.fromstring(xml_text)
         items = root.findall(".//item")
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         for item in items:
             start_text = item.findtext("start")
             if not start_text:
