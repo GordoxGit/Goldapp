@@ -53,3 +53,12 @@ class FomcNext(BaseModel):
     time: str  # HH:MM (UTC)
     title: str
     url: str
+
+
+class PowellSpeech(BaseModel):
+    """Represent the next scheduled speech from Jerome Powell."""
+
+    date: str  # YYYY-MM-DD
+    time: str  # HH:MM (UTC)
+    title: str
+    url: str

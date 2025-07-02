@@ -7,6 +7,7 @@ from .crud import (
     fetch_fed_rate,
     fetch_vix,
     fetch_fomc_next,
+    fetch_powell_speech,
 )
 from .schemas import (
     MarketIndices,
@@ -15,6 +16,7 @@ from .schemas import (
     FedRate,
     VIXClose,
     FomcNext,
+    PowellSpeech,
 )
 
 app = FastAPI(title="Goldapp API")
@@ -88,6 +90,16 @@ def get_fomc_next():
     """Return the next upcoming FOMC meeting."""
     try:
         data = fetch_fomc_next()
+    except Exception:
+        raise HTTPException(status_code=503, detail="Service Unavailable")
+    return data
+
+
+@app.get("/api/v1/powell_speech", response_model=PowellSpeech | None)
+def get_powell_speech():
+    """Return details of the next Powell speech."""
+    try:
+        data = fetch_powell_speech()
     except Exception:
         raise HTTPException(status_code=503, detail="Service Unavailable")
     return data
