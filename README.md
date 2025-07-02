@@ -67,6 +67,7 @@ BEA_API_KEY=xxxxxxxxxxxxxxxx
 | `/api/v1/fed_rate`       | GET     | Dernier taux directeur de la FED |
 | `/api/v1/vix`            | GET     | Clôture quotidienne du VIX |
 | `/api/v1/fomc_next`      | GET     | Prochaine réunion FOMC |
+| `/api/v1/powell_speech`  | GET     | Prochain discours de Jerome Powell |
 
 Exemple de réponse :
 
@@ -75,6 +76,17 @@ Exemple de réponse :
   "date": "2024-07-31",
   "time": "18:00",
   "title": "FOMC Meeting",
+  "url": "https://www.federalreserve.gov/..."
+}
+```
+
+Exemple pour `/api/v1/powell_speech` :
+
+```json
+{
+  "date": "2024-08-15",
+  "time": "14:30",
+  "title": "Speech by Chair Powell",
   "url": "https://www.federalreserve.gov/..."
 }
 ```

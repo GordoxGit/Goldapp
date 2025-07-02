@@ -14,6 +14,7 @@ from .schemas import (
     FedRate,
     VIXClose,
     FomcNext,
+    PowellSpeech,
 )
 
 CACHE = TTLCache(maxsize=8, ttl=settings.ttl)
@@ -22,6 +23,7 @@ PCE_CACHE = TTLCache(maxsize=1, ttl=86400)
 FRED_RATE_CACHE = TTLCache(maxsize=1, ttl=21600)
 VIX_CACHE = TTLCache(maxsize=1, ttl=21600)
 FOMC_NEXT_CACHE = TTLCache(maxsize=1, ttl=86400)
+POWELL_SPEECH_CACHE = TTLCache(maxsize=1, ttl=43200)
 
 BLS_BASE_URL = "https://api.bls.gov/publicAPI/v2/timeseries/data/"
 BLS_CPI_SERIES = "CUUR0000SA0"
@@ -234,4 +236,44 @@ def fetch_fomc_next() -> FomcNext | None:
         return None
     except Exception as exc:
         FOMC_NEXT_CACHE.clear()
+        raise RuntimeError("RSS parse error") from exc
+
+
+@cached(POWELL_SPEECH_CACHE)
+def fetch_powell_speech() -> PowellSpeech | None:
+    """Return the next Powell speech parsed from the Fed press RSS feed."""
+    url = "https://www.federalreserve.gov/feeds/press_all.xml"
+    try:
+        resp = requests.get(url, timeout=10)
+        resp.raise_for_status()
+        xml_text = resp.text
+    except Exception as exc:
+        POWELL_SPEECH_CACHE.clear()
+        raise RuntimeError("Fed RSS unavailable") from exc
+
+    try:
+        root = ElementTree.fromstring(xml_text)
+        items = root.findall(".//item")
+        now = datetime.now(timezone.utc)
+        for item in items:
+            title = item.findtext("title") or ""
+            desc = item.findtext("description") or ""
+            if "powell" not in (title + desc).lower():
+                continue
+            pubdate_text = item.findtext("pubDate")
+            if not pubdate_text:
+                continue
+            dt = datetime.strptime(pubdate_text, "%a, %d %b %Y %H:%M:%S %z")
+            dt_utc = dt.astimezone(timezone.utc)
+            if dt_utc > now:
+                link = item.findtext("link") or ""
+                return PowellSpeech(
+                    date=dt_utc.strftime("%Y-%m-%d"),
+                    time=dt_utc.strftime("%H:%M"),
+                    title=title,
+                    url=link,
+                )
+        return None
+    except Exception as exc:
+        POWELL_SPEECH_CACHE.clear()
         raise RuntimeError("RSS parse error") from exc
